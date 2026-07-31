@@ -64,6 +64,7 @@ export async function refreshActive () {
   }
   store.active = active
   store.activeSessionStart = session.start
+  store.now = Date.now()
   const parts = []
   const visited = new Set()
   let cur = task
@@ -88,11 +89,19 @@ export async function refreshAll () {
 }
 
 let ticker = null
+function tickNow () {
+  store.now = Date.now()
+}
+function onVisibilityChange () {
+  if (document.visibilityState === 'visible') tickNow()
+}
+
 export function startTicker () {
   if (ticker) return
-  ticker = setInterval(() => {
-    store.now = Date.now()
-  }, 1000)
+  tickNow()
+  ticker = setInterval(tickNow, 500)
+  document.addEventListener('visibilitychange', onVisibilityChange)
+  window.addEventListener('focus', tickNow)
 }
 
 export function stopTicker () {
@@ -100,4 +109,6 @@ export function stopTicker () {
     clearInterval(ticker)
     ticker = null
   }
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+  window.removeEventListener('focus', tickNow)
 }

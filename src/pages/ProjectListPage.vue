@@ -80,8 +80,9 @@ async function toggleArchive (project) {
 
 const todayMs = computed(() => aggregations.value?.todayTotalMs || 0)
 const visibleProjects = computed(() => {
-  if (showArchived.value) return projects.value
-  return projects.value.filter((p) => !p.archivedAt)
+  return showArchived.value
+    ? projects.value.filter((p) => p.archivedAt)
+    : projects.value.filter((p) => !p.archivedAt)
 })
 const archivedCount = computed(() => projects.value.filter((p) => p.archivedAt).length)
 </script>
@@ -110,8 +111,11 @@ const archivedCount = computed(() => projects.value.filter((p) => p.archivedAt).
 
     <div v-if="loading" class="page__loading">加载中…</div>
     <div v-else-if="visibleProjects.length === 0" class="page__empty">
-      <template v-if="archivedCount > 0">
-        没有活跃项目。{{ archivedCount }} 个已归档，点击"显示归档"查看。
+      <template v-if="showArchived">
+        没有已归档项目。
+      </template>
+      <template v-else-if="archivedCount > 0">
+        没有活跃项目。{{ archivedCount }} 个已归档，点击"已归档"查看。
       </template>
       <template v-else>
         还没有项目。点击右上角"新建项目"开始记录工时。
