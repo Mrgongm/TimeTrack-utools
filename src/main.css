@@ -1,35 +1,197 @@
 :root {
   --blue: rgb(88, 164, 246);
   --light: #fff;
+  --card-bg: #fff;
+  --border: #e5e7eb;
+  --hover-bg: rgba(0, 0, 0, 0.04);
+  --input-bg: #fff;
+  --text: #1f2937;
+  --muted: rgba(0, 0, 0, 0.6);
 }
 
-html,
-body {
+@media (prefers-color-scheme: dark) {
+  :root {
+    --card-bg: #1f2937;
+    --border: #374151;
+    --hover-bg: rgba(255, 255, 255, 0.06);
+    --input-bg: #1f2937;
+    --text: #f3f4f6;
+    --muted: rgba(255, 255, 255, 0.6);
+    --blue: rgb(96, 165, 250);
+  }
+}
+
+html, body {
   margin: 0;
   padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 14px;
+  color: var(--text);
+}
+
+* {
+  box-sizing: border-box;
 }
 
 button {
   border: none;
   background: none var(--blue);
   color: var(--light);
-  line-height: 2.5;
+  line-height: 1.6;
   cursor: pointer;
-  transition: opacity .2s;
+  transition: opacity .15s, background .15s;
+  font-family: inherit;
 }
 
 button:disabled {
-  filter: grayscale(1);
+  filter: grayscale(0.5);
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 button:not(:disabled):active {
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
 textarea {
   display: block;
   margin: 0;
+}
+
+.btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.btn--ghost:hover {
+  background: var(--hover-bg);
+}
+
+.btn--danger {
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+}
+
+.btn--danger:hover {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.btn--sm {
+  padding: 3px 8px;
+  font-size: 12px;
+}
+
+.btn--block {
+  display: block;
+  width: 100%;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-family: inherit;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modal__body {
+  background: var(--card-bg);
+  padding: 18px;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 380px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal__body h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+}
+
+.modal__body p {
+  font-size: 13px;
+  margin: 6px 0;
+}
+
+.modal__hint {
+  opacity: 0.6;
+  font-size: 12px !important;
+}
+
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.page {
+  padding: 14px 16px 24px;
+}
+
+.page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.page__title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.page__title h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.page__loading, .page__empty {
+  padding: 40px 0;
+  text-align: center;
+  opacity: 0.6;
+}
+
+.back-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 @media (prefers-color-scheme: light) {
@@ -47,11 +209,11 @@ textarea {
 }
 
 @media (prefers-color-scheme: dark) {
-  &::-webkit-scrollbar-track-piece {
+  ::-webkit-scrollbar-track-piece {
     background-color: #303133;
   }
 
-  &::-webkit-scrollbar-thumb {
+  ::-webkit-scrollbar-thumb {
     background-color: #666;
     border-color: #303133;
   }
