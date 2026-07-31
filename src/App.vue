@@ -43,6 +43,7 @@ onUnmounted(() => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: var(--bg);
 }
 .app__main {
   flex: 1;
@@ -50,20 +51,24 @@ onUnmounted(() => {
 }
 .app__toast {
   position: fixed;
-  bottom: 16px;
+  bottom: 22px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 8px 16px;
-  background: rgba(0, 0, 0, 0.8);
+  padding: 10px 18px;
+  background: rgba(42, 37, 32, 0.92);
   color: #fff;
-  border-radius: 6px;
+  border-radius: 10px;
   font-size: 13px;
   z-index: 100;
+  box-shadow: var(--shadow-lg);
+  backdrop-filter: blur(8px);
+  animation: toast-in .25s ease;
+  max-width: 90%;
 }
 .app__toast--error {
-  background: rgba(220, 38, 38, 0.9);
+  background: var(--danger);
 }
 .app__toast--success {
-  background: rgba(22, 163, 74, 0.9);
+  background: var(--success);
 }
 </style>

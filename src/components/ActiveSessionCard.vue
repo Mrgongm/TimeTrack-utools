@@ -29,78 +29,115 @@ async function onPause () {
 </script>
 
 <template>
-  <div class="active-card" :class="{ 'is-long': isLong, 'off-hours': !inWorkHours }">
+  <div class="active-card" :class="{ 'is-long': isLong, 'off-hours': !inWorkHours, 'is-idle': !store.active }">
+    <span v-if="store.active" class="active-card__pulse" />
     <template v-if="store.active">
       <div class="active-card__path">{{ store.activeTaskPath }}</div>
       <div class="active-card__times">
+        <span v-if="!inWorkHours" class="active-card__pill active-card__pill--warning">非工作时段</span>
         <span class="active-card__effective">{{ formatDuration(effectiveMs) }}</span>
-        <span v-if="!inWorkHours" class="active-card__off">非工作时段</span>
       </div>
-      <button class="active-card__pause" @click="onPause">⏸ 暂停</button>
+      <button class="btn btn--ghost active-card__pause" @click="onPause">⏸ 暂停</button>
     </template>
     <template v-else>
-      <div class="active-card__idle">未在计时</div>
+      <div class="active-card__idle">
+        <span class="active-card__idle-dot" />
+        未在计时
+      </div>
     </template>
   </div>
 </template>
 
 <style scoped>
 .active-card {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
-  background: var(--card-bg, #fff);
-  border-bottom: 1px solid var(--border, #e5e7eb);
   gap: 12px;
+  margin: 12px 14px 4px;
+  padding: 14px 18px 14px 22px;
+  background: linear-gradient(135deg, var(--card-bg) 0%, var(--card-bg-soft) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+.active-card__pulse {
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--success);
+  animation: pulse 2s ease-in-out infinite;
 }
 .active-card__path {
   flex: 1;
   font-weight: 500;
+  font-size: 13px;
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .active-card__times {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
 }
 .active-card__effective {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--blue, #58a4f6);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--accent);
 }
-.active-card__off {
+.active-card__pill {
   font-size: 11px;
-  padding: 2px 6px;
-  background: rgba(245, 158, 11, 0.2);
-  border-radius: 4px;
-  color: #b45309;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+.active-card__pill--warning {
+  background: var(--warning-soft);
+  color: var(--warning);
 }
 .active-card__pause {
-  padding: 6px 14px;
+  padding: 7px 18px;
   font-size: 13px;
-  border-radius: 4px;
+  font-weight: 500;
 }
 .active-card.is-long {
-  background: rgba(239, 68, 68, 0.1);
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.10) 0%, rgba(220, 38, 38, 0.04) 100%);
+  border-color: rgba(220, 38, 38, 0.25);
 }
 .active-card.is-long .active-card__effective {
-  color: #dc2626;
+  color: var(--danger);
+}
+.active-card.is-long .active-card__pulse {
+  background: var(--danger);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.active-card.is-idle {
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
 }
 .active-card__idle {
-  opacity: 0.5;
-  font-size: 14px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
 }
-@media (prefers-color-scheme: dark) {
-  .active-card {
-    background: #1f2937;
-    border-bottom-color: #374151;
-  }
-  .active-card__off {
-    color: #fbbf24;
-  }
+.active-card__idle-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  display: inline-block;
 }
 </style>

@@ -25,10 +25,14 @@ const ctx = inject('taskTreeCtx')
       <span class="task-row__complete" @click="ctx.onToggleComplete(task)">
         {{ task.completed ? '✅' : '⬜' }}
       </span>
-      <span class="task-row__name" @click="ctx.pushRoute('task-detail', { taskId: task._id })">
+      <span class="task-row__name" @click="ctx.toggleExpand(task._id)">
         {{ task.name }}
       </span>
-      <span class="task-row__duration">
+      <span
+        class="task-row__duration"
+        :title="'打开详情'"
+        @click="ctx.pushRoute('task-detail', { taskId: task._id })"
+      >
         {{ ctx.formatDuration(ctx.aggregations.taskTotalMs.get(task._id) || 0) }}
       </span>
       <div class="task-row__actions">
@@ -53,26 +57,35 @@ const ctx = inject('taskTreeCtx')
 .task-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 8px;
-  border-radius: 6px;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 6px;
+  transition: var(--transition);
 }
 .task-row:hover {
-  background: var(--hover-bg);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
 }
 .task-row--active {
-  background: rgba(88, 164, 246, 0.12);
+  border-left: 3px solid var(--success);
+  background: linear-gradient(135deg, var(--success-soft) 0%, var(--card-bg) 60%);
+  padding-left: 10px;
 }
 .task-row--done .task-row__name {
   text-decoration: line-through;
-  opacity: 0.5;
+  color: var(--text-soft);
 }
 .task-row__expand {
   cursor: pointer;
   width: 16px;
   text-align: center;
   font-size: 12px;
-  opacity: 0.7;
+  color: var(--muted);
+  flex-shrink: 0;
 }
 .task-row__expand--blank {
   cursor: default;
@@ -80,26 +93,43 @@ const ctx = inject('taskTreeCtx')
 .task-row__complete {
   cursor: pointer;
   font-size: 14px;
+  flex-shrink: 0;
 }
 .task-row__name {
   flex: 1;
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .task-row__duration {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 12px;
-  opacity: 0.7;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+.task-row__duration:hover {
+  background: var(--accent-soft);
 }
 .task-row__actions {
   display: flex;
   gap: 3px;
+  flex-shrink: 0;
 }
 .task-tree__children {
   list-style: none;
-  padding-left: 22px;
-  margin: 0;
+  padding-left: 20px;
+  margin: 4px 0 0;
+}
+.task-tree__children .task-row {
+  background: var(--card-bg-soft);
 }
 </style>

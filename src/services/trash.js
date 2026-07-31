@@ -29,7 +29,7 @@ export async function listTrashBatches () {
       projectCount: projectsInBatch.length,
       taskCount: tasksInBatch.length,
       sessionCount: sessionsInBatch.length,
-      label: root ? root.name : 'Session'
+      label: root ? root.name : '工时记录'
     })
   }
   return result.sort((a, b) => b.batch - a.batch)

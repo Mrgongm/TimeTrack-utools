@@ -20,7 +20,7 @@ function describe (batch) {
   const parts = []
   if (batch.projectCount > 0) parts.push(`${batch.projectCount} 个项目`)
   if (batch.taskCount > 0) parts.push(`${batch.taskCount} 个任务`)
-  if (batch.sessionCount > 0) parts.push(`${batch.sessionCount} 个 Session`)
+  if (batch.sessionCount > 0) parts.push(`${batch.sessionCount} 段工时`)
   return parts.join(' / ') || '空'
 }
 
@@ -91,31 +91,39 @@ async function confirmPurge () {
 .trash-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 6px;
-  margin-bottom: 4px;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 8px;
+  transition: var(--transition);
 }
 .trash-item:hover {
-  background: var(--hover-bg);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
 }
 .trash-item__main {
   flex: 1;
   min-width: 0;
 }
 .trash-item__label {
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .trash-item__meta {
   font-size: 12px;
-  opacity: 0.6;
-  margin-top: 2px;
+  color: var(--muted);
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
 }
 .trash-item__actions {
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
 </style>

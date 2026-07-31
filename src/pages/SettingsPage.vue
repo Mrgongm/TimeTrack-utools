@@ -108,7 +108,7 @@ function back () {
       <section class="settings-section">
         <h3 class="settings-section__title">工作时间段</h3>
         <p class="settings-section__hint">
-          工时将仅在配置的工作时段内累计。Session 数据本身不变，仅影响实际工时计算。
+          工时将仅在配置的工作时段内累计。原始记录数据不变，仅影响实际工时计算。
         </p>
 
         <div v-for="day in DAY_LABELS" :key="day.key" class="schedule-day">
@@ -146,7 +146,7 @@ function back () {
 
       <section class="settings-section">
         <h3 class="settings-section__title">数据</h3>
-        <p class="settings-section__hint">导出所有数据（Project / Task / Session / 设置）为 JSON 文件，存入下载目录。</p>
+        <p class="settings-section__hint">导出所有数据（Project / Task / 工时 / 设置）为 JSON 文件，存入下载目录。</p>
         <button class="btn btn--ghost" :disabled="exporting" @click="onExport">
           {{ exporting ? '导出中…' : '⬇ 导出 JSON' }}
         </button>
@@ -157,34 +157,42 @@ function back () {
 
 <style scoped>
 .settings-section {
-  margin-bottom: 24px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--border);
-}
-.settings-section:last-child {
-  border-bottom: none;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 20px;
+  margin-bottom: 14px;
 }
 .settings-section__title {
-    font-size: 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
   margin: 0 0 6px;
 }
 .settings-section__hint {
   font-size: 12px;
-  opacity: 0.6;
-  margin: 0 0 12px;
+  color: var(--muted);
+  margin: 0 0 14px;
 }
 .settings-section__actions {
-  margin-top: 12px;
+  margin-top: 14px;
 }
 .schedule-day {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 8px 0;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.schedule-day:last-of-type {
+  border-bottom: none;
 }
 .schedule-day__label {
   width: 50px;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
   flex-shrink: 0;
   padding-top: 6px;
 }
@@ -200,16 +208,20 @@ function back () {
   gap: 6px;
 }
 .schedule-segment__dash {
-  opacity: 0.6;
+  color: var(--muted);
 }
 .input--time {
   width: auto;
-  padding: 4px 8px;
+  padding: 5px 10px;
   font-size: 13px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  background: var(--card-bg-soft);
 }
 .schedule-day__empty {
   font-size: 12px;
-  opacity: 0.5;
+  color: var(--muted);
   padding-top: 4px;
+  font-style: italic;
 }
 </style>

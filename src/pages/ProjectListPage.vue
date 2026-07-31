@@ -74,7 +74,7 @@ const totalProjectCount = computed(() => aggregations.value?.liveProjectCount ||
     <header class="page__header">
       <div class="page__title">
         <h2>项目</h2>
-        <span class="page__today">今日 {{ formatDuration(todayMs) }}</span>
+        <span class="pill">今日 {{ formatDuration(todayMs) }}</span>
       </div>
       <div class="page__actions">
         <button class="btn btn--ghost" @click="pushRoute('trash')">📋 最近删除</button>
@@ -138,7 +138,7 @@ const totalProjectCount = computed(() => aggregations.value?.liveProjectCount ||
     <div v-if="deleting" class="modal" @click.self="deleting = null">
       <div class="modal__body">
         <h3>删除项目</h3>
-        <p>将删除项目 <strong>{{ deleting.name }}</strong> 及其下所有 Task 和 Sessions。</p>
+        <p>将删除项目 <strong>{{ deleting.name }}</strong> 及其下所有 Task 和工时。</p>
         <p class="modal__hint">可在"最近删除"中恢复。</p>
         <div class="modal__actions">
           <button class="btn btn--ghost" @click="deleting = null">取消</button>
@@ -150,11 +150,6 @@ const totalProjectCount = computed(() => aggregations.value?.liveProjectCount ||
 </template>
 
 <style scoped>
-.page__today {
-  font-size: 12px;
-  font-family: ui-monospace, Menlo, monospace;
-  color: var(--blue);
-}
 .page__actions {
   display: flex;
   gap: 6px;
@@ -169,12 +164,18 @@ const totalProjectCount = computed(() => aggregations.value?.liveProjectCount ||
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
-  border-radius: 6px;
-  margin-bottom: 4px;
+  padding: 14px 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 8px;
+  transition: var(--transition);
 }
 .project-item:hover {
-  background: var(--hover-bg);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
 }
 .project-item__main {
   flex: 1;
@@ -182,15 +183,19 @@ const totalProjectCount = computed(() => aggregations.value?.liveProjectCount ||
   min-width: 0;
 }
 .project-item__name {
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .project-item__total {
-  font-size: 12px;
-  opacity: 0.6;
-  margin-top: 2px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: var(--text-soft);
+  margin-top: 4px;
 }
 .project-item__actions {
   display: flex;

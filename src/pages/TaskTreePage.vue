@@ -173,7 +173,7 @@ const projectTotalMs = computed(() => {
     <header class="page__header">
       <div class="page__title">
         <h2 v-if="project">{{ project.name }}</h2>
-        <span class="page__total">合计 {{ formatDuration(projectTotalMs) }}</span>
+        <span class="pill">合计 {{ formatDuration(projectTotalMs) }}</span>
       </div>
       <button class="btn" @click="openCreateTop">+ 创建任务</button>
     </header>
@@ -248,9 +248,9 @@ const projectTotalMs = computed(() => {
         <h3>删除任务</h3>
         <p>将删除任务 <strong>{{ deleting.name }}</strong></p>
         <p v-if="deleting._descendants && deleting._descendants.length > 0" class="modal__hint">
-          及其 {{ deleting._descendants.length }} 个子任务，所有相关 Sessions 一并移入最近删除。
+          及其 {{ deleting._descendants.length }} 个子任务，所有相关工时一并移入最近删除。
         </p>
-        <p v-else class="modal__hint">所有相关 Sessions 一并移入最近删除。</p>
+        <p v-else class="modal__hint">所有相关工时一并移入最近删除。</p>
         <div class="modal__actions">
           <button class="btn btn--ghost" @click="deleting = null">取消</button>
           <button class="btn btn--danger" @click="confirmDelete">删除</button>
@@ -261,11 +261,6 @@ const projectTotalMs = computed(() => {
 </template>
 
 <style scoped>
-.page__total {
-  font-size: 12px;
-  font-family: ui-monospace, Menlo, monospace;
-  color: var(--blue);
-}
 .task-tree {
   list-style: none;
   padding: 0;

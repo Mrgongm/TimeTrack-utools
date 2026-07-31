@@ -104,7 +104,7 @@ async function confirmAdd () {
   await createSession(props.taskId, start, end)
   showAdd.value = false
   await reload()
-  setToast('已添加 Session', 'success')
+  setToast('已添加工时', 'success')
 }
 
 function openEdit (session) {
@@ -169,7 +169,7 @@ const descendantMs = computed(() => totalMs.value - selfMs.value)
           <button class="btn btn--ghost" @click="onToggleComplete">
             {{ task.completed ? '取消完成' : '✅ 标完成' }}
           </button>
-          <button class="btn btn--ghost" @click="openAdd">+ 添加 Session</button>
+          <button class="btn btn--ghost" @click="openAdd">+ 添加工时</button>
         </div>
       </header>
 
@@ -187,9 +187,9 @@ const descendantMs = computed(() => totalMs.value - selfMs.value)
         </div>
       </div>
 
-      <h3 class="detail-section">Sessions</h3>
+      <h3 class="detail-section">工时记录</h3>
       <div v-if="sessions.length === 0" class="page__empty">
-        还没有 Session。点击"开始"或"+ 添加 Session"。
+        还没有工时记录。点击"开始"或"+ 添加工时"。
       </div>
       <ul v-else class="session-list">
         <li v-for="s in sessions" :key="s._id" class="session-row" @click="openEdit(s)">
@@ -205,7 +205,7 @@ const descendantMs = computed(() => totalMs.value - selfMs.value)
 
       <div v-if="showAdd" class="modal" @click.self="showAdd = false">
         <div class="modal__body">
-          <h3>添加 Session</h3>
+          <h3>添加工时</h3>
           <label class="field-label">开始</label>
           <input v-model="newStart" type="datetime-local" step="1" class="input" />
           <label class="field-label">结束</label>
@@ -219,7 +219,7 @@ const descendantMs = computed(() => totalMs.value - selfMs.value)
 
       <div v-if="editing" class="modal" @click.self="editing = null">
         <div class="modal__body">
-          <h3>编辑 Session</h3>
+          <h3>编辑工时</h3>
           <label class="field-label">开始</label>
           <input v-model="editStart" type="datetime-local" step="1" class="input" />
           <label class="field-label">结束（留空表示计时中）</label>
@@ -233,8 +233,8 @@ const descendantMs = computed(() => totalMs.value - selfMs.value)
 
       <div v-if="deleting" class="modal" @click.self="deleting = null">
         <div class="modal__body">
-          <h3>删除 Session</h3>
-          <p>将此 Session 移入最近删除。</p>
+          <h3>删除工时</h3>
+          <p>将此工时移入最近删除。</p>
           <div class="modal__actions">
             <button class="btn btn--ghost" @click="deleting = null">取消</button>
             <button class="btn btn--danger" @click="confirmDelete">删除</button>
@@ -253,17 +253,22 @@ const descendantMs = computed(() => totalMs.value - selfMs.value)
 }
 .detail-path__crumb {
   font-size: 11px;
-  opacity: 0.6;
+  color: var(--muted);
 }
 .detail-path__crumb--link {
   cursor: pointer;
+  transition: var(--transition);
 }
 .detail-path__crumb--link:hover {
-  text-decoration: underline;
+  color: var(--accent);
 }
 .detail-done {
-  font-size: 12px;
-  color: var(--blue);
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--success-soft);
+  color: var(--success);
+  font-weight: 500;
 }
 .page__actions {
   display: flex;
@@ -271,31 +276,45 @@ const descendantMs = computed(() => totalMs.value - selfMs.value)
   flex-wrap: wrap;
 }
 .detail-summary {
-  display: flex;
-  gap: 20px;
-  padding: 12px;
-  background: var(--hover-bg);
-  border-radius: 6px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
   margin-bottom: 18px;
+}
+.summary-item {
+  padding: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-sm);
 }
 .summary-item__label {
   font-size: 11px;
-  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 6px;
 }
 .summary-item__value {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--blue);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.01em;
 }
 .summary-item__sub {
   font-size: 11px;
-  opacity: 0.6;
+  color: var(--muted);
+  margin-top: 4px;
 }
 .detail-section {
-  font-size: 13px;
-  margin: 14px 0 8px;
-  opacity: 0.7;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 16px 0 10px;
 }
 .session-list {
   list-style: none;
@@ -305,22 +324,32 @@ const descendantMs = computed(() => totalMs.value - selfMs.value)
 .session-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 6px;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 6px;
   cursor: pointer;
+  transition: var(--transition);
 }
 .session-row:hover {
-  background: var(--hover-bg);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
 }
 .session-row__time {
   flex: 1;
   font-size: 13px;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
 }
 .session-row__duration {
-  font-family: ui-monospace, Menlo, monospace;
-  font-size: 13px;
-  font-weight: 500;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent);
 }
 .session-row__actions {
   display: flex;
@@ -329,7 +358,7 @@ const descendantMs = computed(() => totalMs.value - selfMs.value)
 .field-label {
   display: block;
   font-size: 11px;
-  opacity: 0.6;
-  margin: 8px 0 4px;
+  color: var(--muted);
+  margin: 10px 0 4px;
 }
 </style>
