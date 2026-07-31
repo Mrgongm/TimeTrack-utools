@@ -198,7 +198,7 @@ const descendantMs = computed(() => totalMs.value - selfMs.value)
           </div>
           <div class="session-row__duration">{{ formatDuration(s.effectiveMs || 0) }}</div>
           <div class="session-row__actions">
-            <button class="btn btn--danger btn--sm" @click.stop="deleting = s">🗑</button>
+            <button class="btn btn--danger btn--sm" @click.stop="deleting = s">×</button>
           </div>
         </li>
       </ul>

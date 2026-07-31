@@ -39,8 +39,8 @@ const ctx = inject('taskTreeCtx')
         <button v-if="!ctx.isActive(task._id)" class="btn btn--sm" @click="ctx.onStart(task._id)">▶</button>
         <button v-else class="btn btn--sm" @click="ctx.onPause()">⏸</button>
         <button class="btn btn--ghost btn--sm" @click="ctx.openAddChild(task)">＋</button>
-        <button class="btn btn--ghost btn--sm" @click="ctx.openRename(task)">✏</button>
-        <button class="btn btn--danger btn--sm" @click="ctx.openDelete(task)">🗑</button>
+        <button class="btn btn--ghost btn--sm" @click="ctx.openRename(task)">✎</button>
+        <button class="btn btn--danger btn--sm" @click="ctx.openDelete(task)">×</button>
       </div>
     </div>
     <ul v-if="ctx.expanded.has(task._id)" class="task-tree__children">

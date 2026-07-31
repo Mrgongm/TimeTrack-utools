@@ -94,8 +94,8 @@ const totalProjectCount = computed(() => aggregations.value?.liveProjectCount ||
           <div class="project-item__total">合计 {{ formatDuration(aggregations.projectTotalMs.get(p._id) || 0) }}</div>
         </div>
         <div class="project-item__actions">
-          <button class="btn btn--ghost" @click="openRename(p)">✏</button>
-          <button class="btn btn--danger" @click="openDelete(p)">🗑</button>
+          <button class="btn btn--ghost" @click="openRename(p)">✎</button>
+          <button class="btn btn--danger" @click="openDelete(p)">×</button>
         </div>
       </li>
     </ul>
