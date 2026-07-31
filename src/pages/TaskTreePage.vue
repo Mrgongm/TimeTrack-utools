@@ -4,6 +4,7 @@ import { listTasksByProject, getDescendantTasks, createTask, renameTask, softDel
 import { getProject } from '../services/project'
 import { startTask, pauseActive, completeTask } from '../services/activeSession'
 import { computeAggregations } from '../services/aggregation'
+import { exportProjectReport } from '../services/exportProjectReport'
 import { store, pushRoute, backRoute, setToast, refreshActive } from '../store'
 import { formatDuration } from '../utils/time'
 import TaskTreeNode from '../components/TaskTreeNode.vue'
@@ -46,6 +47,20 @@ async function reload () {
 }
 
 onMounted(reload)
+
+const exporting = ref(false)
+async function onExportReport () {
+  if (exporting.value) return
+  exporting.value = true
+  try {
+    const path = await exportProjectReport(props.projectId)
+    setToast(`已导出到 ${path}`, 'success')
+  } catch (e) {
+    setToast(`导出失败: ${e.message || e}`, 'error')
+  } finally {
+    exporting.value = false
+  }
+}
 
 const tree = computed(() => {
   const byParent = new Map()
@@ -188,6 +203,9 @@ const projectTotalMs = computed(() => {
       <div class="page__actions">
         <button class="btn btn--ghost" @click="hideCompleted = !hideCompleted">
           {{ hideCompleted ? '显示已完成' : '隐藏已完成' }}
+        </button>
+        <button class="btn btn--ghost" :disabled="exporting" @click="onExportReport">
+          {{ exporting ? '导出中…' : '⬇ 导出工时' }}
         </button>
         <button class="btn" @click="openCreateTop">+ 创建任务</button>
       </div>
