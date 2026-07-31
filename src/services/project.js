@@ -18,7 +18,8 @@ export async function createProject (name) {
     name,
     createdAt: now,
     updatedAt: now,
-    deletedAt: null
+    deletedAt: null,
+    archivedAt: null
   }
   await putDoc(doc)
   return doc
@@ -28,6 +29,15 @@ export async function renameProject (id, name) {
   const doc = await getDoc(id)
   if (!doc) throw new Error(`Project not found: ${id}`)
   doc.name = name
+  doc.updatedAt = Date.now()
+  await putDoc(doc)
+  return doc
+}
+
+export async function setProjectArchived (id, archived) {
+  const doc = await getDoc(id)
+  if (!doc) throw new Error(`Project not found: ${id}`)
+  doc.archivedAt = archived ? Date.now() : null
   doc.updatedAt = Date.now()
   await putDoc(doc)
   return doc

@@ -182,7 +182,7 @@ const descendantMs = computed(() => totalMs.value - selfMs.value)
           <div class="summary-item__label">合计工时</div>
           <div class="summary-item__value">{{ formatDuration(totalMs) }}</div>
           <div v-if="descendantMs > 0" class="summary-item__sub">
-            （含后代 {{ formatDuration(descendantMs) }}）
+            （含子任务 {{ formatDuration(descendantMs) }}）
           </div>
         </div>
       </div>

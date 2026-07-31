@@ -1,9 +1,11 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { listProjects, createProject, renameProject, softDeleteProjectCascade } from '../services/project'
+import { ref, onMounted, computed, watch } from 'vue'
+import { listProjects, createProject, renameProject, softDeleteProjectCascade, setProjectArchived } from '../services/project'
 import { computeAggregations } from '../services/aggregation'
 import { pushRoute, setToast, refreshActive } from '../store'
 import { formatDuration } from '../utils/time'
+
+const SHOW_ARCHIVED_KEY = 'timetrack:showArchived'
 
 const projects = ref([])
 const aggregations = ref(null)
@@ -13,6 +15,11 @@ const newName = ref('')
 const renaming = ref(null)
 const renameValue = ref('')
 const deleting = ref(null)
+const showArchived = ref(localStorage.getItem(SHOW_ARCHIVED_KEY) === '1')
+
+watch(showArchived, (v) => {
+  localStorage.setItem(SHOW_ARCHIVED_KEY, v ? '1' : '0')
+})
 
 async function reload () {
   loading.value = true
@@ -65,8 +72,18 @@ async function confirmDelete () {
   setToast(`已删除（${result.count} 项），可在最近删除恢复`, 'success')
 }
 
+async function toggleArchive (project) {
+  await setProjectArchived(project._id, !project.archivedAt)
+  await reload()
+  setToast(project.archivedAt ? '已取消归档' : '已归档', 'success')
+}
+
 const todayMs = computed(() => aggregations.value?.todayTotalMs || 0)
-const totalProjectCount = computed(() => aggregations.value?.liveProjectCount || 0)
+const visibleProjects = computed(() => {
+  if (showArchived.value) return projects.value
+  return projects.value.filter((p) => !p.archivedAt)
+})
+const archivedCount = computed(() => projects.value.filter((p) => p.archivedAt).length)
 </script>
 
 <template>
@@ -77,6 +94,14 @@ const totalProjectCount = computed(() => aggregations.value?.liveProjectCount ||
         <span class="pill">今日 {{ formatDuration(todayMs) }}</span>
       </div>
       <div class="page__actions">
+        <button
+          class="btn"
+          :class="showArchived ? 'btn--toggle-on' : 'btn--ghost'"
+          @click="showArchived = !showArchived"
+        >
+          已归档
+          <span v-if="archivedCount > 0" class="btn__badge">{{ archivedCount }}</span>
+        </button>
         <button class="btn btn--ghost" @click="pushRoute('trash')">📋 最近删除</button>
         <button class="btn btn--ghost" @click="pushRoute('settings')">⚙ 设置</button>
         <button class="btn" @click="openCreate">+ 新建项目</button>
@@ -84,16 +109,32 @@ const totalProjectCount = computed(() => aggregations.value?.liveProjectCount ||
     </header>
 
     <div v-if="loading" class="page__loading">加载中…</div>
-    <div v-else-if="projects.length === 0" class="page__empty">
-      还没有项目。点击右上角"新建项目"开始记录工时。
+    <div v-else-if="visibleProjects.length === 0" class="page__empty">
+      <template v-if="archivedCount > 0">
+        没有活跃项目。{{ archivedCount }} 个已归档，点击"显示归档"查看。
+      </template>
+      <template v-else>
+        还没有项目。点击右上角"新建项目"开始记录工时。
+      </template>
     </div>
     <ul v-else class="project-list">
-      <li v-for="p in projects" :key="p._id" class="project-item">
+      <li
+        v-for="p in visibleProjects"
+        :key="p._id"
+        class="project-item"
+        :class="{ 'project-item--archived': p.archivedAt }"
+      >
         <div class="project-item__main" @click="pushRoute('task-tree', { projectId: p._id })">
-          <div class="project-item__name">{{ p.name }}</div>
+          <div class="project-item__name">
+            {{ p.name }}
+            <span v-if="p.archivedAt" class="project-item__archived-pill">已归档</span>
+          </div>
           <div class="project-item__total">合计 {{ formatDuration(aggregations.projectTotalMs.get(p._id) || 0) }}</div>
         </div>
         <div class="project-item__actions">
+          <button class="btn btn--ghost" :title="p.archivedAt ? '取消归档' : '归档'" @click="toggleArchive(p)">
+            {{ p.archivedAt ? '↩' : '📦' }}
+          </button>
           <button class="btn btn--ghost" @click="openRename(p)">✎</button>
           <button class="btn btn--danger" @click="openDelete(p)">×</button>
         </div>
@@ -177,6 +218,14 @@ const totalProjectCount = computed(() => aggregations.value?.liveProjectCount ||
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
+.project-item--archived {
+  background: var(--card-bg-soft);
+  border-style: dashed;
+}
+.project-item--archived .project-item__name {
+  color: var(--text-soft);
+  font-weight: 500;
+}
 .project-item__main {
   flex: 1;
   cursor: pointer;
@@ -189,6 +238,18 @@ const totalProjectCount = computed(() => aggregations.value?.liveProjectCount ||
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.project-item__archived-pill {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--hover-bg);
+  color: var(--muted);
+  font-weight: 500;
+  flex-shrink: 0;
 }
 .project-item__total {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
@@ -200,5 +261,19 @@ const totalProjectCount = computed(() => aggregations.value?.liveProjectCount ||
 .project-item__actions {
   display: flex;
   gap: 4px;
+}
+.btn__badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+.btn--toggle-on .btn__badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
 }
 </style>

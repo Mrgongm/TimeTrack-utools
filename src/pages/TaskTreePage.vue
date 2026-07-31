@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, provide, reactive } from 'vue'
+import { ref, computed, onMounted, watch, provide, reactive } from 'vue'
 import { listTasksByProject, getDescendantTasks, createTask, renameTask, softDeleteTaskSubtreeCascade } from '../services/task'
 import { getProject } from '../services/project'
 import { startTask, pauseActive, completeTask } from '../services/activeSession'
@@ -7,6 +7,8 @@ import { computeAggregations } from '../services/aggregation'
 import { store, pushRoute, backRoute, setToast, refreshActive } from '../store'
 import { formatDuration } from '../utils/time'
 import TaskTreeNode from '../components/TaskTreeNode.vue'
+
+const HIDE_COMPLETED_KEY = 'timetrack:hideCompleted'
 
 const props = defineProps({
   projectId: { type: String, required: true }
@@ -17,6 +19,7 @@ const tasks = ref([])
 const aggregations = ref(null)
 const loading = ref(true)
 const expanded = ref(new Set())
+const hideCompleted = ref(localStorage.getItem(HIDE_COMPLETED_KEY) === '1')
 const showCreateTop = ref(false)
 const newTopName = ref('')
 const addingChildFor = ref(null)
@@ -24,6 +27,10 @@ const newChildName = ref('')
 const renaming = ref(null)
 const renameValue = ref('')
 const deleting = ref(null)
+
+watch(hideCompleted, (v) => {
+  localStorage.setItem(HIDE_COMPLETED_KEY, v ? '1' : '0')
+})
 
 async function reload () {
   loading.value = true
@@ -43,12 +50,15 @@ onMounted(reload)
 const tree = computed(() => {
   const byParent = new Map()
   for (const t of tasks.value) {
+    if (hideCompleted.value && t.completed) continue
     const key = t.parentId || '__root__'
     if (!byParent.has(key)) byParent.set(key, [])
     byParent.get(key).push(t)
   }
   return byParent
 })
+
+const hiddenCount = computed(() => hideCompleted.value ? tasks.value.filter((t) => t.completed).length : 0)
 
 function childrenOf (parentId) {
   return tree.value.get(parentId || '__root__') || []
@@ -175,7 +185,12 @@ const projectTotalMs = computed(() => {
         <h2 v-if="project">{{ project.name }}</h2>
         <span class="pill">合计 {{ formatDuration(projectTotalMs) }}</span>
       </div>
-      <button class="btn" @click="openCreateTop">+ 创建任务</button>
+      <div class="page__actions">
+        <button class="btn btn--ghost" @click="hideCompleted = !hideCompleted">
+          {{ hideCompleted ? '显示已完成' : '隐藏已完成' }}
+        </button>
+        <button class="btn" @click="openCreateTop">+ 创建任务</button>
+      </div>
     </header>
 
     <div v-if="loading" class="page__loading">加载中…</div>
@@ -189,6 +204,9 @@ const projectTotalMs = computed(() => {
         :task="task"
       />
     </ul>
+    <div v-if="!loading && hiddenCount > 0" class="tree-hidden-hint">
+      已隐藏 {{ hiddenCount }} 个完成任务
+    </div>
 
     <div v-if="showCreateTop" class="modal" @click.self="showCreateTop = false">
       <div class="modal__body">
@@ -261,9 +279,24 @@ const projectTotalMs = computed(() => {
 </template>
 
 <style scoped>
+.page__actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 .task-tree {
   list-style: none;
   padding: 0;
   margin: 0;
+}
+.tree-hidden-hint {
+  margin-top: 12px;
+  padding: 8px 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--card-bg-soft);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
 }
 </style>
