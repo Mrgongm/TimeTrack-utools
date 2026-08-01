@@ -6,6 +6,7 @@ import TaskTreePage from './pages/TaskTreePage.vue'
 import TaskDetailPage from './pages/TaskDetailPage.vue'
 import SettingsPage from './pages/SettingsPage.vue'
 import TrashPage from './pages/TrashPage.vue'
+import CalendarPage from './pages/CalendarPage.vue'
 import { store, router, refreshAll, startTicker, stopTicker, resetRoute } from './store'
 
 onMounted(async () => {
@@ -33,6 +34,7 @@ onUnmounted(() => {
       <TaskDetailPage v-else-if="router.current.name === 'task-detail'" :task-id="router.current.params.taskId" />
       <SettingsPage v-else-if="router.current.name === 'settings'" />
       <TrashPage v-else-if="router.current.name === 'trash'" />
+      <CalendarPage v-else-if="router.current.name === 'calendar'" />
     </main>
     <div v-if="store.toast" class="app__toast" :class="`app__toast--${store.toast.type}`">{{ store.toast.msg }}</div>
   </div>

@@ -1,6 +1,7 @@
 import { allDocsByPrefix } from './db'
 import { getWorkSchedule } from './workSchedule'
 import { calcEffectiveMs } from '../utils/effective'
+import { startOfDay } from '../utils/time'
 
 function buildChildrenMap (tasks) {
   const map = new Map()
@@ -70,4 +71,20 @@ export async function computeAggregations (now = Date.now()) {
     liveTaskCount: liveTasks.length,
     liveProjectCount: liveProjects.length
   }
+}
+
+export async function computeDailyTotals (rangeStartMs, rangeEndMs, now = Date.now()) {
+  const [sessions, workSchedule] = await Promise.all([
+    allDocsByPrefix('session/'),
+    getWorkSchedule()
+  ])
+  const totals = new Map()
+  for (const s of sessions) {
+    if (s.deletedAt) continue
+    if (s.start < rangeStartMs || s.start >= rangeEndMs) continue
+    const dayStart = startOfDay(s.start)
+    const ms = s.end ? (s.effectiveMs || 0) : calcEffectiveMs(s.start, now, workSchedule)
+    totals.set(dayStart, (totals.get(dayStart) || 0) + ms)
+  }
+  return totals
 }

@@ -72,10 +72,20 @@ async function confirmDelete () {
   setToast(`已删除（${result.count} 项），可在最近删除恢复`, 'success')
 }
 
-async function toggleArchive (project) {
-  await setProjectArchived(project._id, !project.archivedAt)
+const archiving = ref(null)
+
+function openArchive (project) {
+  archiving.value = project
+}
+
+async function confirmArchive () {
+  if (!archiving.value) return
+  const p = archiving.value
+  const willArchive = !p.archivedAt
+  archiving.value = null
+  await setProjectArchived(p._id, willArchive)
   await reload()
-  setToast(project.archivedAt ? '已取消归档' : '已归档', 'success')
+  setToast(willArchive ? '已归档' : '已取消归档', 'success')
 }
 
 const todayMs = computed(() => aggregations.value?.todayTotalMs || 0)
@@ -103,6 +113,7 @@ const archivedCount = computed(() => projects.value.filter((p) => p.archivedAt).
           已归档
           <span v-if="archivedCount > 0" class="btn__badge">{{ archivedCount }}</span>
         </button>
+        <button class="btn btn--ghost" @click="pushRoute('calendar')">📅 工时日历</button>
         <button class="btn btn--ghost" @click="pushRoute('trash')">📋 最近删除</button>
         <button class="btn btn--ghost" @click="pushRoute('settings')">⚙ 设置</button>
         <button class="btn" @click="openCreate">+ 新建项目</button>
@@ -136,7 +147,7 @@ const archivedCount = computed(() => projects.value.filter((p) => p.archivedAt).
           <div class="project-item__total">合计 {{ formatDuration(aggregations.projectTotalMs.get(p._id) || 0) }}</div>
         </div>
         <div class="project-item__actions">
-          <button class="btn btn--ghost" :title="p.archivedAt ? '取消归档' : '归档'" @click="toggleArchive(p)">
+          <button class="btn btn--ghost" :title="p.archivedAt ? '取消归档' : '归档'" @click="openArchive(p)">
             {{ p.archivedAt ? '↩' : '📦' }}
           </button>
           <button class="btn btn--ghost" @click="openRename(p)">✎</button>
@@ -188,6 +199,22 @@ const archivedCount = computed(() => projects.value.filter((p) => p.archivedAt).
         <div class="modal__actions">
           <button class="btn btn--ghost" @click="deleting = null">取消</button>
           <button class="btn btn--danger" @click="confirmDelete">删除</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="archiving" class="modal" @click.self="archiving = null">
+      <div class="modal__body">
+        <h3>{{ archiving.archivedAt ? '取消归档' : '归档项目' }}</h3>
+        <p v-if="!archiving.archivedAt">
+          将归档项目 <strong>{{ archiving.name }}</strong>。归档后项目在默认视图中隐藏，所有数据保留，可随时取消归档。
+        </p>
+        <p v-else>
+          将 <strong>{{ archiving.name }}</strong> 恢复为活跃项目。
+        </p>
+        <div class="modal__actions">
+          <button class="btn btn--ghost" @click="archiving = null">取消</button>
+          <button class="btn" @click="confirmArchive">确定</button>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch, provide, reactive } from 'vue'
-import { listTasksByProject, getDescendantTasks, createTask, renameTask, softDeleteTaskSubtreeCascade } from '../services/task'
+import { listTasksByProject, getDescendantTasks, createTask, renameTask, softDeleteTaskSubtreeCascade, updateTaskOrders } from '../services/task'
 import { getProject } from '../services/project'
 import { startTask, pauseActive, completeTask } from '../services/activeSession'
 import { computeAggregations } from '../services/aggregation'
@@ -74,6 +74,43 @@ const tree = computed(() => {
 })
 
 const hiddenCount = computed(() => hideCompleted.value ? tasks.value.filter((t) => t.completed).length : 0)
+
+const draggedTaskId = ref(null)
+
+function setDraggedTaskId (id) {
+  draggedTaskId.value = id
+}
+
+function canDropOn (targetTask) {
+  if (!draggedTaskId.value) return false
+  if (draggedTaskId.value === targetTask._id) return false
+  const dragged = tasks.value.find((t) => t._id === draggedTaskId.value)
+  if (!dragged) return false
+  return (dragged.parentId || null) === (targetTask.parentId || null)
+}
+
+async function dropTask (targetTask, position) {
+  if (!canDropOn(targetTask)) return
+  const draggedId = draggedTaskId.value
+  draggedTaskId.value = null
+  const siblings = tasks.value.filter((t) => (t.parentId || null) === (targetTask.parentId || null))
+  const withoutDragged = siblings.filter((t) => t._id !== draggedId)
+  const targetIndex = withoutDragged.findIndex((t) => t._id === targetTask._id)
+  if (targetIndex < 0) return
+  const insertIndex = position === 'before' ? targetIndex : targetIndex + 1
+  const dragged = siblings.find((t) => t._id === draggedId)
+  withoutDragged.splice(insertIndex, 0, dragged)
+  const orders = {}
+  withoutDragged.forEach((t, i) => { orders[t._id] = (i + 1) * 1000 })
+  try {
+    await updateTaskOrders(orders)
+    tasks.value = tasks.value
+      .map((t) => orders[t._id] !== undefined ? { ...t, order: orders[t._id] } : t)
+      .sort((a, b) => (a.order ?? a.createdAt) - (b.order ?? b.createdAt))
+  } catch (e) {
+    setToast(`排序失败: ${e.message || e}`, 'error')
+  }
+}
 
 function childrenOf (parentId) {
   return tree.value.get(parentId || '__root__') || []
@@ -181,7 +218,11 @@ provide('taskTreeCtx', reactive({
   openDelete,
   aggregations,
   pushRoute,
-  formatDuration
+  formatDuration,
+  draggedTaskId,
+  setDraggedTaskId,
+  canDropOn,
+  dropTask
 }))
 
 const projectTotalMs = computed(() => {

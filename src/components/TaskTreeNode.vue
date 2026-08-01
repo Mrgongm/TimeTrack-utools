@@ -1,18 +1,65 @@
 <script setup>
-import { inject } from 'vue'
+import { ref, inject } from 'vue'
 
 const props = defineProps({
   task: { type: Object, required: true }
 })
 
 const ctx = inject('taskTreeCtx')
+
+const dropPos = ref(null)
+
+function onDragStart (e) {
+  ctx.setDraggedTaskId(props.task._id)
+  e.dataTransfer.effectAllowed = 'move'
+  e.dataTransfer.setData('text/plain', props.task._id)
+}
+
+function onDragEnd () {
+  ctx.setDraggedTaskId(null)
+  dropPos.value = null
+}
+
+function onDragOver (e) {
+  if (!ctx.canDropOn(props.task)) return
+  e.preventDefault()
+  e.stopPropagation()
+  e.dataTransfer.dropEffect = 'move'
+  const rect = e.currentTarget.getBoundingClientRect()
+  dropPos.value = e.clientY < rect.top + rect.height / 2 ? 'before' : 'after'
+}
+
+function onDragLeave (e) {
+  if (e.currentTarget.contains(e.relatedTarget)) return
+  dropPos.value = null
+}
+
+function onDrop (e) {
+  if (!ctx.canDropOn(props.task) || !dropPos.value) return
+  e.preventDefault()
+  e.stopPropagation()
+  ctx.dropTask(props.task, dropPos.value)
+  dropPos.value = null
+}
 </script>
 
 <template>
   <li>
     <div
       class="task-row"
-      :class="{ 'task-row--active': ctx.isActive(task._id), 'task-row--done': task.completed }"
+      :class="{
+        'task-row--active': ctx.isActive(task._id),
+        'task-row--done': task.completed,
+        'task-row--dragging': ctx.draggedTaskId === task._id,
+        'task-row--drop-before': dropPos === 'before',
+        'task-row--drop-after': dropPos === 'after'
+      }"
+      draggable="true"
+      @dragstart="onDragStart"
+      @dragend="onDragEnd"
+      @dragover="onDragOver"
+      @dragleave="onDragLeave"
+      @drop="onDrop"
     >
       <span
         v-if="ctx.childrenOf(task._id).length > 0"
@@ -65,10 +112,31 @@ const ctx = inject('taskTreeCtx')
   box-shadow: var(--shadow-sm);
   margin-bottom: 6px;
   transition: var(--transition);
+  position: relative;
 }
 .task-row:hover {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-md);
+}
+.task-row--dragging {
+  opacity: 0.4;
+}
+.task-row--drop-before::before,
+.task-row--drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  z-index: 1;
+}
+.task-row--drop-before::before {
+  top: -4px;
+}
+.task-row--drop-after::after {
+  bottom: -4px;
 }
 .task-row--active {
   border-left: 3px solid var(--success);
