@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
-import { listProjects, createProject, renameProject, softDeleteProjectCascade, setProjectArchived } from '../services/project'
+import { listProjects, createProject, renameProject, softDeleteProjectCascade, setProjectArchived, updateProjectOrders } from '../services/project'
 import { computeAggregations } from '../services/aggregation'
 import { pushRoute, setToast, refreshActive } from '../store'
 import { formatDuration } from '../utils/time'
@@ -95,6 +95,72 @@ const visibleProjects = computed(() => {
     : projects.value.filter((p) => !p.archivedAt)
 })
 const archivedCount = computed(() => projects.value.filter((p) => p.archivedAt).length)
+
+const draggedProjectId = ref(null)
+const dropTargetId = ref(null)
+const dropPos = ref(null)
+
+function onDragStart (e, project) {
+  draggedProjectId.value = project._id
+  dropTargetId.value = null
+  dropPos.value = null
+  e.dataTransfer.effectAllowed = 'move'
+  e.dataTransfer.setData('text/plain', project._id)
+}
+
+function onDragEnd () {
+  draggedProjectId.value = null
+  dropTargetId.value = null
+  dropPos.value = null
+}
+
+function onDragOver (e, project) {
+  if (!draggedProjectId.value || draggedProjectId.value === project._id) return
+  e.preventDefault()
+  e.dataTransfer.dropEffect = 'move'
+  const rect = e.currentTarget.getBoundingClientRect()
+  const pos = e.clientY < rect.top + rect.height / 2 ? 'before' : 'after'
+  dropTargetId.value = project._id
+  dropPos.value = pos
+}
+
+function onDragLeave (e, project) {
+  if (dropTargetId.value === project._id) {
+    dropTargetId.value = null
+    dropPos.value = null
+  }
+}
+
+async function onDrop (e, project) {
+  e.preventDefault()
+  const draggedId = draggedProjectId.value
+  const targetId = project._id
+  const pos = dropPos.value
+  draggedProjectId.value = null
+  dropTargetId.value = null
+  dropPos.value = null
+  if (!draggedId || !targetId || draggedId === targetId || !pos) return
+
+  const list = [...visibleProjects.value]
+  const dragged = list.find((p) => p._id === draggedId)
+  const target = list.find((p) => p._id === targetId)
+  if (!dragged || !target) return
+  const withoutDragged = list.filter((p) => p._id !== draggedId)
+  const targetIndex = withoutDragged.findIndex((p) => p._id === targetId)
+  if (targetIndex < 0) return
+  const insertIndex = pos === 'before' ? targetIndex : targetIndex + 1
+  withoutDragged.splice(insertIndex, 0, dragged)
+  const orders = {}
+  withoutDragged.forEach((p, i) => { orders[p._id] = (i + 1) * 1000 })
+  try {
+    await updateProjectOrders(orders)
+    projects.value = projects.value
+      .map((p) => orders[p._id] !== undefined ? { ...p, order: orders[p._id] } : p)
+      .sort((a, b) => (a.order ?? a.createdAt) - (b.order ?? b.createdAt))
+  } catch (e) {
+    setToast(`排序失败: ${e.message || e}`, 'error')
+  }
+}
 </script>
 
 <template>
@@ -137,7 +203,18 @@ const archivedCount = computed(() => projects.value.filter((p) => p.archivedAt).
         v-for="p in visibleProjects"
         :key="p._id"
         class="project-item"
-        :class="{ 'project-item--archived': p.archivedAt }"
+        :class="{
+          'project-item--archived': p.archivedAt,
+          'project-item--dragging': draggedProjectId === p._id,
+          'project-item--drop-before': dropTargetId === p._id && dropPos === 'before',
+          'project-item--drop-after': dropTargetId === p._id && dropPos === 'after'
+        }"
+        draggable="true"
+        @dragstart="onDragStart($event, p)"
+        @dragend="onDragEnd"
+        @dragover="onDragOver($event, p)"
+        @dragleave="onDragLeave($event, p)"
+        @drop="onDrop($event, p)"
       >
         <div class="project-item__main" @click="pushRoute('task-tree', { projectId: p._id })">
           <div class="project-item__name">
@@ -147,10 +224,10 @@ const archivedCount = computed(() => projects.value.filter((p) => p.archivedAt).
           <div class="project-item__total">合计 {{ formatDuration(aggregations.projectTotalMs.get(p._id) || 0) }}</div>
         </div>
         <div class="project-item__actions">
+          <button class="btn btn--ghost" @click="openRename(p)">✎</button>
           <button class="btn btn--ghost" :title="p.archivedAt ? '取消归档' : '归档'" @click="openArchive(p)">
             {{ p.archivedAt ? '↩' : '📦' }}
           </button>
-          <button class="btn btn--ghost" @click="openRename(p)">✎</button>
           <button class="btn btn--danger" @click="openDelete(p)">×</button>
         </div>
       </li>
@@ -243,11 +320,32 @@ const archivedCount = computed(() => projects.value.filter((p) => p.archivedAt).
   box-shadow: var(--shadow-sm);
   margin-bottom: 8px;
   transition: var(--transition);
+  position: relative;
 }
 .project-item:hover {
   border-color: var(--border-strong);
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
+}
+.project-item--dragging {
+  opacity: 0.4;
+}
+.project-item--drop-before::before,
+.project-item--drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+  z-index: 1;
+}
+.project-item--drop-before::before {
+  top: -4px;
+}
+.project-item--drop-after::after {
+  bottom: -4px;
 }
 .project-item--archived {
   background: var(--card-bg-soft);

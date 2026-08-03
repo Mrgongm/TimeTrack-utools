@@ -4,7 +4,7 @@ export async function listProjects () {
   const docs = await allDocsByPrefix('project/')
   return docs
     .filter((p) => !p.deletedAt)
-    .sort((a, b) => a.createdAt - b.createdAt)
+    .sort((a, b) => (a.order ?? a.createdAt) - (b.order ?? b.createdAt))
 }
 
 export async function getProject (id) {
@@ -19,10 +19,25 @@ export async function createProject (name) {
     createdAt: now,
     updatedAt: now,
     deletedAt: null,
-    archivedAt: null
+    archivedAt: null,
+    order: now
   }
   await putDoc(doc)
   return doc
+}
+
+export async function updateProjectOrders (orders) {
+  const ids = Object.keys(orders)
+  if (ids.length === 0) return
+  const docs = await Promise.all(ids.map((id) => getDoc(id)))
+  const toUpdate = []
+  for (const doc of docs) {
+    if (!doc) continue
+    doc.order = orders[doc._id]
+    doc.updatedAt = Date.now()
+    toUpdate.push(doc)
+  }
+  if (toUpdate.length > 0) await bulkDocs(toUpdate)
 }
 
 export async function renameProject (id, name) {
